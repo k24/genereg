@@ -5,6 +5,7 @@ import com.github.k24.genereg.primitive.PrimitiveStore;
 import com.github.k24.genereg.registry.*;
 import com.github.k24.genereg.test.ComplexRegistrar;
 import com.github.k24.genereg.test.ExtendedRegistrar;
+import com.github.k24.genereg.test.PrimitivityRegistrar;
 import com.github.k24.genereg.test.RegistryRegistrar;
 import org.assertj.core.api.Condition;
 
@@ -28,7 +29,8 @@ public class GeneregTest {
         mockPrimitiveEditor = mock(PrimitiveStore.Editor.class);
         genereg = new Genereg.Builder()
                 .primitiveStore(mockPrimitiveStore)
-                .registryStore(mockPrimitiveEditor)
+                .primitiveEditor(mockPrimitiveEditor)
+                .addPrimitivityFactory(new PrimitivityRegistrar.Factory())
                 .build();
     }
 
@@ -236,5 +238,17 @@ public class GeneregTest {
         assertThat(complexRegistrar.intObjValue()).isEqualTo(2);
         assertThat(complexRegistrar.longObjValue()).isEqualTo(3L);
         assertThat(complexRegistrar.primitiveValue()).isEqualTo(Primitive.valueOf(4));
+    }
+
+    @org.junit.Test
+    public void newRegistrar_primitivity() throws Exception {
+        // Prepare
+        when(mockPrimitiveStore.get("doubleReg")).thenReturn(Primitive.valueOf("0.0"));
+
+        // Run
+        PrimitivityRegistrar primitivityRegistrar = genereg.newRegistrar(PrimitivityRegistrar.class);
+
+        // Verify
+        assertThat(primitivityRegistrar.doubleReg().get()).isEqualTo(0.0);
     }
 }

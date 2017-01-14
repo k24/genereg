@@ -121,6 +121,7 @@ public final class Primitive {
         private static final Map<Object, Primitive> MAP = new HashMap<Object, Primitive>();
 
         public static synchronized Primitive getOrNew(Class<?> clazz, Object value) {
+            if (value == null) return null;
             Map<Object, Primitive> map = MAP;
             Primitive primitive = map.get(value);
             if (primitive == null) {

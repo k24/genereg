@@ -7,4 +7,8 @@ public interface Primitivity<T> {
     Primitive toPrimitive(T value);
 
     T fromPrimitive(Primitive primitive);
+
+    interface Factory {
+        <T> Primitivity<T> primitivity(Class<T> valueType);
+    }
 }

@@ -17,7 +17,7 @@ public abstract class PrimitivityRegistry<T> extends Registry<T> {
         this.primitivity = primitivity;
     }
 
-    protected Primitive toPrimitive(T value) {
+    public Primitive toPrimitive(T value) {
         return value == null ? null : primitivity.toPrimitive(value);
     }
 
@@ -25,6 +25,4 @@ public abstract class PrimitivityRegistry<T> extends Registry<T> {
     protected T fromPrimitive(Primitive primitive) {
         return primitive == null ? null : primitivity.fromPrimitive(primitive);
     }
-
-    protected abstract T toPrimitivity(@Nonnull Primitive primitive);
 }

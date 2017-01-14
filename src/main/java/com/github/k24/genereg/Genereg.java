@@ -2,11 +2,15 @@ package com.github.k24.genereg;
 
 import com.github.k24.genereg.primitive.Primitive;
 import com.github.k24.genereg.primitive.PrimitiveStore;
+import com.github.k24.genereg.primitive.Primitivity;
+import com.github.k24.genereg.registry.PrimitivityRegistry;
 import com.github.k24.genereg.registry.Registry;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -16,12 +20,14 @@ public class Genereg {
     final PrimitiveStore primitiveStore;
     private final PrimitiveStore.Editor primitiveEditor;
     private PrimitiveStore.Editor begunPrimitiveEditor;
+    private final List<Primitivity.Factory> primitivityFactoryList;
 
     final boolean noThrowIfUnsupportedMethod;
 
     Genereg(Builder builder) {
         this.primitiveStore = builder.primitiveStore;
         this.primitiveEditor = builder.primitiveEditor;
+        this.primitivityFactoryList = builder.primitivityFactoryList;
         this.noThrowIfUnsupportedMethod = false;
     }
 
@@ -70,6 +76,11 @@ public class Genereg {
         return this;
     }
 
+    public <T> Genereg put(PrimitivityRegistry<T> registry, T value) {
+        ensurePrimitiveEditor().put(registry.name(), registry.toPrimitive(value));
+        return this;
+    }
+
     public Genereg remove(Registry<?> registry) {
         ensurePrimitiveEditor().remove(registry.name());
         return this;
@@ -85,20 +96,34 @@ public class Genereg {
     //endregion
 
     //region Registry
-    public <T, R extends Registry<T>> R newRegistry(Class<R> registryClass, String name, T defaultValue) {
+    public <T, R extends Registry<T>> R newRegistry(Class<R> registryClass, String name, Class<T> valueClass, T defaultValue) {
+        if (Modifier.isAbstract(registryClass.getModifiers()))
+            throw new IllegalArgumentException("Concrete class needed");
+
         try {
+            if (PrimitivityRegistry.class.isAssignableFrom(registryClass)) {
+                // Primitivity
+                Constructor<?> primitivityRegistryConstructor = findPrimitivityRegistryConstructor(registryClass);
+                if (primitivityRegistryConstructor != null) {
+                    return (R) primitivityRegistryConstructor.newInstance(
+                            resolvePrimitivity(valueClass),
+                            primitiveStore, name, defaultValue);
+                }
+            }
+
+            // Normal
             return (R) findRegistryConstructor(registryClass).newInstance(primitiveStore, name, defaultValue);
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }
     }
 
+    public <T, R extends Registry<T>> R newRegistry(Class<R> registryClass, String name, T defaultValue) {
+        return newRegistry(registryClass, name, defaultValue == null ? null : (Class<T>) defaultValue.getClass(), defaultValue);
+    }
+
     public <T, R extends Registry<T>> R newRegistry(Class<R> registryClass, String name) {
-        try {
-            return (R) findRegistryConstructor(registryClass).newInstance(primitiveStore, name, null);
-        } catch (Exception e) {
-            throw new IllegalArgumentException(e);
-        }
+        return newRegistry(registryClass, name, null);
     }
     //endregion
 
@@ -193,6 +218,35 @@ public class Genereg {
         throw new UnsupportedOperationException("Cannot detect Registry");
     }
 
+    private static Constructor<?> findPrimitivityRegistryConstructor(Class<?> type) {
+        for (Constructor<?> constructor : type.getConstructors()) {
+            Class<?>[] parameterTypes = constructor.getParameterTypes();
+            if (parameterTypes.length == 4
+                    && parameterTypes[0].equals(Primitivity.class)
+                    && parameterTypes[1].equals(PrimitiveStore.class)
+                    && parameterTypes[2].equals(String.class)) {
+                return constructor;
+            }
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Class<T> getPrimitivityValueClass(Class<?> primitivyRegistryClass) {
+        Type genericSuperclass = primitivyRegistryClass.getGenericSuperclass();
+        if (genericSuperclass instanceof ParameterizedType) {
+            ParameterizedType genericsType = (ParameterizedType) genericSuperclass;
+            Type type = genericsType.getActualTypeArguments()[0];
+            try {
+                if (type instanceof Class) return (Class<T>) type;
+                return (Class<T>) Class.forName(type.toString());
+            } catch (ClassNotFoundException e) {
+                // Ignore
+            }
+        }
+        return null;
+    }
+
     private static class RegistrarProxy implements InvocationHandler {
         private final Genereg genereg;
 
@@ -239,6 +293,7 @@ public class Genereg {
 
                 // Detect
                 if (Primitive.isPrimitive(type)) {
+
                     String name = normalizeGetterName(method.getName());
                     Primitive primitive = genereg.primitiveStore.get(name);
                     if (primitive == null) return defaultValue;
@@ -246,7 +301,19 @@ public class Genereg {
                 } else if (Registry.class.isAssignableFrom(type)) {
                     if (Modifier.isAbstract(type.getModifiers()))
                         throw new UnsupportedOperationException("Cannot handle this: " + type);
-                    return findRegistryConstructor(type).newInstance(genereg.primitiveStore, normalizeGetterName(method.getName()), defaultValue);
+                    String name = normalizeGetterName(method.getName());
+                    Constructor<?> constructor = findPrimitivityRegistryConstructor(type);
+                    if (constructor != null) {
+                        Class<?> valueClass = getPrimitivityValueClass(type);
+                        if (valueClass != null) {
+                            return constructor.newInstance(genereg.resolvePrimitivity(valueClass),
+                                    genereg.primitiveStore,
+                                    name,
+                                    defaultValue);
+                        }
+                    }
+
+                    return findRegistryConstructor(type).newInstance(genereg.primitiveStore, name, defaultValue);
                 } else {
                     throw new UnsupportedOperationException("Cannot handle this: " + type);
                 }
@@ -269,19 +336,33 @@ public class Genereg {
     private static boolean isVoidClass(Class<?> type) {
         return type.equals(void.class) || type.equals(Void.class);
     }
+
+    private <T> Primitivity<T> resolvePrimitivity(Class<T> valueClass) {
+        for (Primitivity.Factory factory : primitivityFactoryList) {
+            Primitivity<T> primitivity = factory.primitivity(valueClass);
+            if (primitivity != null) return primitivity;
+        }
+        throw new IllegalArgumentException("Unknown Value: " + valueClass);
+    }
     //endregion
 
     public static class Builder {
         private PrimitiveStore primitiveStore;
         private PrimitiveStore.Editor primitiveEditor;
+        private List<Primitivity.Factory> primitivityFactoryList = new ArrayList<Primitivity.Factory>();
 
         public Builder primitiveStore(PrimitiveStore primitiveStore) {
             this.primitiveStore = primitiveStore;
             return this;
         }
 
-        public Builder registryStore(PrimitiveStore.Editor primitiveEditor) {
+        public Builder primitiveEditor(PrimitiveStore.Editor primitiveEditor) {
             this.primitiveEditor = primitiveEditor;
+            return this;
+        }
+
+        public Builder addPrimitivityFactory(Primitivity.Factory primitivityFactory) {
+            this.primitivityFactoryList.add(primitivityFactory);
             return this;
         }
 
