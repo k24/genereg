@@ -117,6 +117,30 @@ public final class Primitive {
         return valueClass + ": " + value;
     }
 
+    public static boolean isSameClass(Class<?> type, Class<?> another) {
+        if (isBoolean(type) && isBoolean(another)) return true;
+        if (isFloat(type) && isFloat(another)) return true;
+        if (isInt(type) && isInt(another)) return true;
+        if (isLong(type) && isLong(another)) return true;
+        return type.equals(String.class) && another.equals(String.class);
+    }
+
+    private static boolean isBoolean(Class<?> type) {
+        return type.equals(boolean.class) || type.equals(Boolean.class);
+    }
+
+    private static boolean isFloat(Class<?> type) {
+        return type.equals(float.class) || type.equals(Float.class);
+    }
+
+    private static boolean isInt(Class<?> type) {
+        return type.equals(int.class) || type.equals(Integer.class);
+    }
+
+    private static boolean isLong(Class<?> type) {
+        return type.equals(long.class) || type.equals(Long.class);
+    }
+
     private static class CacheHolder {
         private static final Map<Object, Primitive> MAP = new HashMap<Object, Primitive>();
 

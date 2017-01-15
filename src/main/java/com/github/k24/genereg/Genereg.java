@@ -273,7 +273,7 @@ public class Genereg {
                 Object value = args[0];
 
                 Class<?> paramType = method.getParameterTypes()[0];
-                if (paramType.isPrimitive()) {
+                if (Primitive.isPrimitive(paramType)) {
                     genereg.primitiveStore.put(normalizeSetterName(method.getName()), Primitive.valueOf(paramType, value));
                 } else {
                     throw new UnsupportedOperationException("Don't set not primitive");
@@ -285,7 +285,7 @@ public class Genereg {
                 Object defaultValue = null;
                 if (args != null) {
                     for (Object arg : args) {
-                        if (arg != null && type.equals(arg.getClass())) {
+                        if (arg != null && Primitive.isSameClass(type, arg.getClass())) {
                             defaultValue = arg;
                         }
                     }
@@ -322,11 +322,15 @@ public class Genereg {
     }
 
     private static String normalizeGetterName(String name) {
-        return shouldTrip("get", name) ? name.substring(3) : name;
+        return shouldTrip("get", name) ? decapitalize(name.substring(3)) : name;
     }
 
     private static String normalizeSetterName(String name) {
-        return shouldTrip("set", name) ? name.substring(3) : name;
+        return shouldTrip("set", name) ? decapitalize(name.substring(3)) : name;
+    }
+
+    private static String decapitalize(String name) {
+        return Character.toLowerCase(name.charAt(0)) + name.substring(1);
     }
 
     private static boolean shouldTrip(String prefix, String name) {

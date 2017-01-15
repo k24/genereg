@@ -3,10 +3,7 @@ package com.github.k24.genereg;
 import com.github.k24.genereg.primitive.Primitive;
 import com.github.k24.genereg.primitive.PrimitiveStore;
 import com.github.k24.genereg.registry.*;
-import com.github.k24.genereg.test.ComplexRegistrar;
-import com.github.k24.genereg.test.ExtendedRegistrar;
-import com.github.k24.genereg.test.PrimitivityRegistrar;
-import com.github.k24.genereg.test.RegistryRegistrar;
+import com.github.k24.genereg.test.*;
 import org.assertj.core.api.Condition;
 
 import java.util.Map;
@@ -238,6 +235,58 @@ public class GeneregTest {
         assertThat(complexRegistrar.intObjValue()).isEqualTo(2);
         assertThat(complexRegistrar.longObjValue()).isEqualTo(3L);
         assertThat(complexRegistrar.primitiveValue()).isEqualTo(Primitive.valueOf(4));
+    }
+
+    @org.junit.Test
+    public void newRegistrar_getterSetter() throws Exception {
+        // Prepare
+        when(mockPrimitiveStore.get("boolValue")).thenReturn(null);
+        when(mockPrimitiveStore.get("floatValue")).thenReturn(null);
+        when(mockPrimitiveStore.get("intValue")).thenReturn(null);
+        when(mockPrimitiveStore.get("longValue")).thenReturn(null);
+        when(mockPrimitiveStore.get("stringValue")).thenReturn(null);
+
+        // Run
+        GetterSetterRegistrar registrar = genereg.newRegistrar(GetterSetterRegistrar.class);
+
+        // Verify
+        assertThat(registrar.boolValue(false)).isFalse();
+        assertThat(registrar.floatValue(12f)).isEqualTo(12f);
+        assertThat(registrar.intValue(34)).isEqualTo(34);
+        assertThat(registrar.longValue(56L)).isEqualTo(56L);
+        assertThat(registrar.stringValue("value")).isEqualTo("value");
+
+        // Prepare
+        when(mockPrimitiveStore.get("boolValue")).thenReturn(Primitive.valueOf(true));
+        when(mockPrimitiveStore.get("floatValue")).thenReturn(Primitive.valueOf(12f));
+        when(mockPrimitiveStore.get("intValue")).thenReturn(Primitive.valueOf(34));
+        when(mockPrimitiveStore.get("longValue")).thenReturn(Primitive.valueOf(56L));
+        when(mockPrimitiveStore.get("stringValue")).thenReturn(Primitive.valueOf("78"));
+
+        // Run
+        registrar.setBoolValue(true);
+        registrar.setFloatValue(12f);
+        registrar.setIntValue(34);
+        registrar.setLongValue(56L);
+        registrar.setStringValue("78");
+
+        // Verify
+        assertThat(registrar.boolValue(false)).isTrue();
+        assertThat(registrar.floatValue(0)).isEqualTo(12f);
+        assertThat(registrar.intValue(0)).isEqualTo(34);
+        assertThat(registrar.longValue(0)).isEqualTo(56L);
+        assertThat(registrar.stringValue(null)).isEqualTo("78");
+        assertThat(registrar.getBoolValue()).isTrue();
+        assertThat(registrar.getFloatValue()).isEqualTo(12f);
+        assertThat(registrar.getIntValue()).isEqualTo(34);
+        assertThat(registrar.getLongValue()).isEqualTo(56L);
+        assertThat(registrar.getStringValue()).isEqualTo("78");
+        verify(mockPrimitiveStore).put("boolValue", Primitive.valueOf(true));
+        verify(mockPrimitiveStore).put("floatValue", Primitive.valueOf(12f));
+        verify(mockPrimitiveStore).put("intValue", Primitive.valueOf(34));
+        verify(mockPrimitiveStore).put("longValue", Primitive.valueOf(56L));
+        verify(mockPrimitiveStore).put("stringValue", Primitive.valueOf("78"));
+
     }
 
     @org.junit.Test
