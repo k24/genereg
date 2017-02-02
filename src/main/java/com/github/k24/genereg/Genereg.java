@@ -296,7 +296,12 @@ public class Genereg {
 
                     String name = normalizeGetterName(method.getName());
                     Primitive primitive = genereg.primitiveStore.get(name);
-                    if (primitive == null) return defaultValue;
+                    if (primitive == null) {
+                        if (defaultValue == null && type.isPrimitive()) {
+                            return JavaPrimitives.defaultValue(type);
+                        }
+                        return defaultValue;
+                    }
                     return type.equals(Primitive.class) ? primitive : primitive.value();
                 } else if (Registry.class.isAssignableFrom(type)) {
                     if (Modifier.isAbstract(type.getModifiers()))
@@ -347,6 +352,27 @@ public class Genereg {
             if (primitivity != null) return primitivity;
         }
         throw new IllegalArgumentException("Unknown Value: " + valueClass);
+    }
+
+    private static class JavaPrimitives {
+        private static final Map<Class, Object> DEFAULT_VALUES;
+
+        static {
+            HashMap<Class, Object> map = new HashMap<Class, Object>();
+            map.put(boolean.class, false);
+            map.put(byte.class, (byte)0);
+            map.put(char.class, (char)0);
+            map.put(short.class, (short)0);
+            map.put(int.class, 0);
+            map.put(long.class, 0L);
+            map.put(float.class, 0f);
+            map.put(double.class, 0.0);
+            DEFAULT_VALUES = map;
+        }
+
+        public static Object defaultValue(Class<?> valueClass) {
+            return DEFAULT_VALUES.get(valueClass);
+        }
     }
     //endregion
 
