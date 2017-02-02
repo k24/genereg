@@ -235,6 +235,94 @@ public class GeneregTest {
         assertThat(complexRegistrar.intObjValue()).isEqualTo(2);
         assertThat(complexRegistrar.longObjValue()).isEqualTo(3L);
         assertThat(complexRegistrar.primitiveValue()).isEqualTo(Primitive.valueOf(4));
+
+        assertThat(registryRegistrar.boolReg().getOr(false)).isTrue();
+        assertThat(registryRegistrar.floatReg().getOr(1f)).isEqualTo(123f);
+        assertThat(registryRegistrar.intReg().getOr(23)).isEqualTo(456);
+        assertThat(registryRegistrar.longReg().getOr(45L)).isEqualTo(789L);
+        assertThat(registryRegistrar.stringReg().getOr("67")).isEqualTo("value");
+
+        assertThat(registryRegistrar.boolReg().isEqualTo(null)).isFalse();
+        assertThat(registryRegistrar.floatReg().isEqualTo(null)).isFalse();
+        assertThat(registryRegistrar.intReg().isEqualTo(null)).isFalse();
+        assertThat(registryRegistrar.longReg().isEqualTo(null)).isFalse();
+        assertThat(registryRegistrar.stringReg().isEqualTo(null)).isFalse();
+
+        assertThat(registryRegistrar.boolReg().isEqualTo(false)).isFalse();
+        assertThat(registryRegistrar.floatReg().isEqualTo(1f)).isFalse();
+        assertThat(registryRegistrar.intReg().isEqualTo(23)).isFalse();
+        assertThat(registryRegistrar.longReg().isEqualTo(45L)).isFalse();
+        assertThat(registryRegistrar.stringReg().isEqualTo("67")).isFalse();
+
+        assertThat(registryRegistrar.boolReg().isEqualTo(true)).isTrue();
+        assertThat(registryRegistrar.floatReg().isEqualTo(123f)).isTrue();
+        assertThat(registryRegistrar.intReg().isEqualTo(456)).isTrue();
+        assertThat(registryRegistrar.longReg().isEqualTo(789L)).isTrue();
+        assertThat(registryRegistrar.stringReg().isEqualTo("value")).isTrue();
+    }
+
+    @org.junit.Test
+    public void newRegistrar_noValue() throws Exception {
+        // Prepare
+        when(mockPrimitiveStore.get("boolReg")).thenReturn(null);
+        when(mockPrimitiveStore.get("floatReg")).thenReturn(null);
+        when(mockPrimitiveStore.get("intReg")).thenReturn(null);
+        when(mockPrimitiveStore.get("longReg")).thenReturn(null);
+        when(mockPrimitiveStore.get("stringReg")).thenReturn(null);
+
+        when(mockPrimitiveStore.get("boolValue")).thenReturn(null);
+        when(mockPrimitiveStore.get("floatValue")).thenReturn(null);
+        when(mockPrimitiveStore.get("intValue")).thenReturn(null);
+        when(mockPrimitiveStore.get("longValue")).thenReturn(null);
+        when(mockPrimitiveStore.get("stringValue")).thenReturn(null);
+
+        when(mockPrimitiveStore.get("boolObjValue")).thenReturn(null);
+        when(mockPrimitiveStore.get("floatObjValue")).thenReturn(null);
+        when(mockPrimitiveStore.get("intObjValue")).thenReturn(null);
+        when(mockPrimitiveStore.get("longObjValue")).thenReturn(null);
+        when(mockPrimitiveStore.get("primitiveValue")).thenReturn(null);
+
+        // Run
+        RegistryRegistrar registryRegistrar = genereg.newRegistrar(RegistryRegistrar.class);
+        ComplexRegistrar complexRegistrar = genereg.newRegistrar(ComplexRegistrar.class);
+
+        // Verify
+        assertThat(registryRegistrar.boolReg().get()).isNull();
+        assertThat(registryRegistrar.floatReg().get()).isNull();
+        assertThat(registryRegistrar.intReg().get()).isNull();
+        assertThat(registryRegistrar.longReg().get()).isNull();
+        assertThat(registryRegistrar.stringReg().get()).isNull();
+
+        assertThat(complexRegistrar.stringReg().get()).isNull();
+        assertThat(complexRegistrar.intReg().get()).isNull();
+        assertThat(complexRegistrar.boolValue()).isFalse();
+        assertThat(complexRegistrar.floatValue()).isEqualTo(0f);
+        assertThat(complexRegistrar.intValue()).isEqualTo(0);
+        assertThat(complexRegistrar.longValue()).isEqualTo(0L);
+        assertThat(complexRegistrar.stringValue()).isNull();
+        assertThat(complexRegistrar.boolObjValue()).isNull();
+        assertThat(complexRegistrar.floatObjValue()).isNull();
+        assertThat(complexRegistrar.intObjValue()).isNull();
+        assertThat(complexRegistrar.longObjValue()).isNull();
+        assertThat(complexRegistrar.primitiveValue()).isNull();
+
+        assertThat(registryRegistrar.boolReg().getOr(false)).isFalse();
+        assertThat(registryRegistrar.floatReg().getOr(1f)).isEqualTo(1f);
+        assertThat(registryRegistrar.intReg().getOr(23)).isEqualTo(23);
+        assertThat(registryRegistrar.longReg().getOr(45L)).isEqualTo(45L);
+        assertThat(registryRegistrar.stringReg().getOr("67")).isEqualTo("67");
+
+        assertThat(registryRegistrar.boolReg().isEqualTo(null)).isTrue();
+        assertThat(registryRegistrar.floatReg().isEqualTo(null)).isTrue();
+        assertThat(registryRegistrar.intReg().isEqualTo(null)).isTrue();
+        assertThat(registryRegistrar.longReg().isEqualTo(null)).isTrue();
+        assertThat(registryRegistrar.stringReg().isEqualTo(null)).isTrue();
+
+        assertThat(registryRegistrar.boolReg().isEqualTo(false)).isFalse();
+        assertThat(registryRegistrar.floatReg().isEqualTo(1f)).isFalse();
+        assertThat(registryRegistrar.intReg().isEqualTo(23)).isFalse();
+        assertThat(registryRegistrar.longReg().isEqualTo(45L)).isFalse();
+        assertThat(registryRegistrar.stringReg().isEqualTo("67")).isFalse();
     }
 
     @org.junit.Test

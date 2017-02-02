@@ -51,6 +51,16 @@ public abstract class Registry<T> {
         return defaultValue;
     }
 
+    public final T getOr(T optionalValue) {
+        T value = get();
+        return value == null ? optionalValue : value;
+    }
+
+    public final boolean isEqualTo(T anotherValue) {
+        T value = get();
+        return value == null ? anotherValue == null : value.equals(anotherValue);
+    }
+
     private final T fromPrimitiveOrNull(Primitive primitive) {
         return primitive == null ? null : fromPrimitive(primitive);
     }
