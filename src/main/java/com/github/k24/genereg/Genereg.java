@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * Created by k24 on 2017/01/13.
  */
-public class Genereg {
+public class Genereg implements RegistryEditor {
     final PrimitiveStore primitiveStore;
     private final PrimitiveStore.Editor primitiveEditor;
     private PrimitiveStore.Editor begunPrimitiveEditor;
@@ -51,37 +51,37 @@ public class Genereg {
         begunPrimitiveEditor = null;
     }
 
-    public Genereg put(Registry<String> registry, @Nonnull String value) {
+    public RegistryEditor put(Registry<String> registry, @Nonnull String value) {
         ensurePrimitiveEditor().put(registry.name(), Primitive.valueOf(value));
         return this;
     }
 
-    public Genereg put(Registry<Boolean> registry, boolean value) {
+    public RegistryEditor put(Registry<Boolean> registry, boolean value) {
         ensurePrimitiveEditor().put(registry.name(), Primitive.valueOf(value));
         return this;
     }
 
-    public Genereg put(Registry<Float> registry, float value) {
+    public RegistryEditor put(Registry<Float> registry, float value) {
         ensurePrimitiveEditor().put(registry.name(), Primitive.valueOf(value));
         return this;
     }
 
-    public Genereg put(Registry<Integer> registry, int value) {
+    public RegistryEditor put(Registry<Integer> registry, int value) {
         ensurePrimitiveEditor().put(registry.name(), Primitive.valueOf(value));
         return this;
     }
 
-    public Genereg put(Registry<Long> registry, long value) {
+    public RegistryEditor put(Registry<Long> registry, long value) {
         ensurePrimitiveEditor().put(registry.name(), Primitive.valueOf(value));
         return this;
     }
 
-    public <T> Genereg put(PrimitivityRegistry<T> registry, T value) {
+    public <T> RegistryEditor put(PrimitivityRegistry<T> registry, @Nonnull T value) {
         ensurePrimitiveEditor().put(registry.name(), registry.toPrimitive(value));
         return this;
     }
 
-    public Genereg remove(Registry<?> registry) {
+    public RegistryEditor remove(Registry<?> registry) {
         ensurePrimitiveEditor().remove(registry.name());
         return this;
     }
@@ -360,9 +360,9 @@ public class Genereg {
         static {
             HashMap<Class, Object> map = new HashMap<Class, Object>();
             map.put(boolean.class, false);
-            map.put(byte.class, (byte)0);
-            map.put(char.class, (char)0);
-            map.put(short.class, (short)0);
+            map.put(byte.class, (byte) 0);
+            map.put(char.class, (char) 0);
+            map.put(short.class, (short) 0);
             map.put(int.class, 0);
             map.put(long.class, 0L);
             map.put(float.class, 0f);
